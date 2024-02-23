@@ -82,8 +82,16 @@ int main()
 
 	if (SPI_ENGINE_OFFLOAD_EXAMPLE == 0) {
 		while(1) {
-			ad400x_spi_single_conversion(dev, &adc_data);
-			xil_printf("ADC: %d\n\r", adc_data);
+			ad400x_spi_single_conversion(dev, (uint8_t *)&adc_data);
+			adc_data = no_os_get_unaligned_be32((uint8_t *)&adc_data);
+			adc_data >>= 32 - ad400x_device_resol[dev_id];
+			if (ad400x_device_sign[dev_id] == 's') {
+				int32_t adc_data_s;
+				adc_data_s = no_os_sign_extend32(adc_data, ad400x_device_resol[dev_id] - 1);
+				xil_printf("ADC: %d\n\r", adc_data_s);
+			} else {
+				xil_printf("ADC: %d\n\r", adc_data);
+			}
 		}
 	}
 	/* Offload example */

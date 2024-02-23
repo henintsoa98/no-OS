@@ -67,6 +67,23 @@ const uint16_t ad400x_device_resol[] = {
 	[ID_ADAQ4003] = 18
 };
 
+/**
+ * @brief Device sign
+ */
+const char ad400x_device_sign[] = {
+	[ID_AD4000] = 'u',
+	[ID_AD4001] = 's',
+	[ID_AD4002] = 'u',
+	[ID_AD4003] = 's',
+	[ID_AD4004] = 'u',
+	[ID_AD4005] = 's',
+	[ID_AD4006] = 'u',
+	[ID_AD4007] = 's',
+	[ID_AD4011] = 's',
+	[ID_AD4020] = 's',
+	[ID_ADAQ4003] = 's',
+};
+
 /******************************************************************************/
 /************************** Functions Implementation **************************/
 /******************************************************************************/
@@ -160,9 +177,8 @@ int32_t ad400x_spi_reg_write(struct ad400x_dev *dev,
  * @return 0 in case of success, negative error code otherwise.
  */
 int32_t ad400x_spi_single_conversion(struct ad400x_dev *dev,
-				     uint32_t *adc_data)
+				     uint8_t *adc_data)
 {
-	uint32_t buf = 0;
 	int32_t ret;
 
 #if defined(USE_STANDARD_SPI)
@@ -176,7 +192,7 @@ int32_t ad400x_spi_single_conversion(struct ad400x_dev *dev,
 	if (ret)
 		return ret;
 #endif
-	ret = no_os_spi_write_and_read(dev->spi_desc, (uint8_t *)&buf, 4);
+	ret = no_os_spi_write_and_read(dev->spi_desc, adc_data, 3);
 	if (ret)
 		return ret;
 
@@ -185,8 +201,6 @@ int32_t ad400x_spi_single_conversion(struct ad400x_dev *dev,
 	if (ret)
 		return ret;
 #endif
-	*adc_data = buf & 0xFFFFF;
-
 	return ret;
 }
 
