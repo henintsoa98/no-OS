@@ -43,6 +43,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "stdbool.h"
+#include "string.h"
 #include "ad400x.h"
 #if !defined(USE_STANDARD_SPI)
 #include "spi_engine.h"
@@ -65,6 +66,23 @@ const uint16_t ad400x_device_resol[] = {
 	[ID_AD4011] = 18,
 	[ID_AD4020] = 20,
 	[ID_ADAQ4003] = 18
+};
+
+/**
+ * @brief Device sign
+ */
+const char ad400x_device_sign[] = {
+	[ID_AD4000] = 'u',
+	[ID_AD4001] = 's',
+	[ID_AD4002] = 'u',
+	[ID_AD4003] = 's',
+	[ID_AD4004] = 'u',
+	[ID_AD4005] = 's',
+	[ID_AD4006] = 'u',
+	[ID_AD4007] = 's',
+	[ID_AD4011] = 's',
+	[ID_AD4020] = 's',
+	[ID_ADAQ4003] = 's',
 };
 
 /******************************************************************************/
@@ -160,10 +178,13 @@ int32_t ad400x_spi_reg_write(struct ad400x_dev *dev,
  * @return 0 in case of success, negative error code otherwise.
  */
 int32_t ad400x_spi_single_conversion(struct ad400x_dev *dev,
-				     uint32_t *adc_data)
+				     uint8_t *adc_data)
 {
-	uint32_t buf = 0;
 	int32_t ret;
+	uint16_t bytes_number = 2;
+
+	if (ad400x_device_resol[dev->dev_id ] > 16)
+		bytes_number = 3;
 
 #if defined(USE_STANDARD_SPI)
 	/* CNV need to be high to read sample if SDI is low.
@@ -171,12 +192,13 @@ int32_t ad400x_spi_single_conversion(struct ad400x_dev *dev,
 	 * No need to explicitly add a delay as the meassuered
 	 * lattency to toggle the gpio and spi clk is arround 3usec
 	 * */
-
 	ret = no_os_gpio_set_value(dev->gpio_cnv, 1);
 	if (ret)
 		return ret;
 #endif
-	ret = no_os_spi_write_and_read(dev->spi_desc, (uint8_t *)&buf, 4);
+	/* SDI must remain low */
+	memset(adc_data, 0, bytes_number);
+	ret = no_os_spi_write_and_read(dev->spi_desc, adc_data, bytes_number);
 	if (ret)
 		return ret;
 
@@ -185,8 +207,6 @@ int32_t ad400x_spi_single_conversion(struct ad400x_dev *dev,
 	if (ret)
 		return ret;
 #endif
-	*adc_data = buf & 0xFFFFF;
-
 	return ret;
 }
 
