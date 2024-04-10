@@ -41,7 +41,7 @@ int main()
 	struct spi_engine_offload_message msg;
 	uint32_t commands_data[2] = {0xFF, 0xFF};
 	int32_t ret, data, i;
-	enum ad400x_supported_dev_ids dev_id = ID_AD4020;
+	enum ad400x_supported_dev_ids dev_id = ID_AD4000;
 
 	struct spi_engine_init_param spi_eng_init_param  = {
 		.ref_clk_hz = 160000000,
